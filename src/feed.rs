@@ -451,6 +451,19 @@ where
         Ok(())
     }
 
+    /// Verify the entire feed with a public key. Checks a signature against the signature of all
+    /// root nodes combined.
+    pub async fn verify_with_public(&mut self, public: &PublicKey, index: u64, signature: &Signature) -> Result<()> {
+        let roots = self.root_hashes(index).await?;
+        let roots: Vec<_> = roots.into_iter().map(Arc::new).collect();
+
+        let hash = Hash::from_roots(&roots);
+        let message = hash_with_length_as_bytes(hash, index + 1);
+
+        verify_compat(public, &message, Some(signature))?;
+        Ok(())
+    }
+
     /// Announce we have a piece of data to all other peers.
     // TODO: probably shouldn't be public
     pub fn announce(&mut self, message: &Message, from: &Peer) {
