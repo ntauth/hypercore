@@ -631,7 +631,7 @@ impl Feed<RandomAccessDisk> {
 
         let dir = path.as_ref().to_owned();
 
-        let storage = Storage::new_disk(&dir, false).await?;
+        let storage = Storage::new_disk(dir, false).await?;
         Self::with_storage(storage).await
     }
 }

@@ -264,7 +264,7 @@ async fn audit() {
 async fn audit_bad_data() {
     let mut dir = temp_dir();
     dir.push("audit_bad_data");
-    let storage = Storage::new_disk(&dir, false).await.unwrap();
+    let storage = Storage::new_disk(dir.clone(), false).await.unwrap();
     let mut feed = Feed::with_storage(storage).await.unwrap();
     feed.append(b"hello").await.unwrap();
     feed.append(b"world").await.unwrap();
