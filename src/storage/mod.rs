@@ -18,7 +18,7 @@ use sleep_parser::*;
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::Range;
-use std::path::PathBuf;
+use std::path::Path;
 
 const HEADER_OFFSET: u64 = 32;
 
@@ -385,7 +385,7 @@ impl Storage<RandomAccessMemory> {
 
 impl Storage<RandomAccessDisk> {
     /// Create a new instance backed by a `RandomAccessDisk` instance.
-    pub async fn new_disk(dir: &PathBuf, overwrite: bool) -> Result<Self> {
+    pub async fn new_disk(dir: &Path, overwrite: bool) -> Result<Self> {
         let storage = |storage: Store| {
             let name = match storage {
                 Store::Tree => "tree",
@@ -394,7 +394,7 @@ impl Storage<RandomAccessDisk> {
                 Store::Signatures => "signatures",
                 Store::Keypair => "key",
             };
-            RandomAccessDisk::open(dir.as_path().join(name)).boxed()
+            RandomAccessDisk::open(dir.join(name)).boxed()
         };
         Ok(Self::new(storage, overwrite).await?)
     }
