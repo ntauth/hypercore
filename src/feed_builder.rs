@@ -46,6 +46,20 @@ where
     /// Finalize the builder.
     #[inline]
     pub async fn build(mut self) -> Result<Feed<T>> {
+        // Write the partial keypair
+        self.storage.write_public_key(&self.public_key).await?;
+
+        let mut secret_key: Option<SecretKey> = None;
+
+        if self.secret_key.is_some() {
+            let unwrapped_secret_key = self.secret_key.unwrap();
+            secret_key = Some(SecretKey::from_bytes(unwrapped_secret_key.as_bytes())?);
+
+            self.storage
+                .write_secret_key(&unwrapped_secret_key)
+                .await?;
+        }
+
         let (bitfield, tree) = if let Ok(bitfield) = self.storage.read_bitfield().await {
             Bitfield::from_slice(&bitfield)
         } else {
@@ -81,7 +95,7 @@ where
             bitfield,
             tree,
             public_key: self.public_key,
-            secret_key: self.secret_key,
+            secret_key: secret_key,
             storage: self.storage,
             peers: vec![],
         })
