@@ -1,0 +1,37 @@
+[package]
+name = "random-access-sse"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libsse = { path = "../../../libsse" }
+libsse-auth = { path = "../../../libsse/crates/auth" }
+parking_lot = "0.11.0"
+
+[dependencies.anyhow]
+version = "1.0.26"
+
+[dependencies.async-std]
+version = "1.5.0"
+
+[dependencies.async-trait]
+version = "0.1.24"
+
+[dependencies.mkdirp]
+version = "1.0.0"
+
+[dependencies.random-access-storage]
+version = "4.0.0"
+
+[dev-dependencies.async-std]
+version = "1.5.0"
+features = ["attributes"]
+
+[dev-dependencies.quickcheck]
+version = "0.9.2"
+
+[dev-dependencies.rand]
+version = "0.7.3"
+
+[dev-dependencies.tempfile]
+version = "3.1.0"

@@ -31,6 +31,7 @@ rand = "0.7.3"
 random-access-disk = "2.0.0"
 random-access-memory = "2.0.0"
 random-access-storage = "4.0.0"
+random-access-sse = { path = "crates/random-access-sse" }
 sha2 = "0.8.1"
 sleep-parser = "0.8.0"
 sparse-bitfield = "0.11.0"
