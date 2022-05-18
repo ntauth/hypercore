@@ -15,6 +15,7 @@ use flat_tree as flat;
 use pretty_hash::fmt as pretty_fmt;
 use random_access_disk::RandomAccessDisk;
 use random_access_memory::RandomAccessMemory;
+use random_access_sse::{AuthSession, Mutex, ObjectId, RandomAccessSse};
 use random_access_storage::RandomAccess;
 use tree_index::TreeIndex;
 
@@ -453,7 +454,12 @@ where
 
     /// Verify the entire feed with a public key. Checks a signature against the signature of all
     /// root nodes combined.
-    pub async fn verify_with_public(&mut self, public: &PublicKey, index: u64, signature: &Signature) -> Result<()> {
+    pub async fn verify_with_public(
+        &mut self,
+        public: &PublicKey,
+        index: u64,
+        signature: &Signature,
+    ) -> Result<()> {
         let roots = self.root_hashes(index).await?;
         let roots: Vec<_> = roots.into_iter().map(Arc::new).collect();
 
@@ -632,6 +638,19 @@ impl Feed<RandomAccessDisk> {
         let dir = path.as_ref().to_owned();
 
         let storage = Storage::new_disk(dir, false).await?;
+        Self::with_storage(storage).await
+    }
+}
+
+impl Feed<RandomAccessSse> {
+    /// Create a new instance that persists to secure storage in the namespace specified by `obj_id`.
+    pub async fn open_secure(
+        storage: Arc<Mutex<random_access_sse::Storage>>,
+        session: AuthSession,
+        obj_id: ObjectId,
+        storage_id: u32,
+    ) -> Result<Self> {
+        let storage = Storage::new_sse(storage, session, obj_id, storage_id, false).await?;
         Self::with_storage(storage).await
     }
 }

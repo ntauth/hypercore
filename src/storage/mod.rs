@@ -13,12 +13,17 @@ use flat_tree as flat;
 use futures::future::FutureExt;
 use random_access_disk::RandomAccessDisk;
 use random_access_memory::RandomAccessMemory;
+use random_access_sse::object::{
+    DATA_FLAG_ACCESS_READ, DATA_FLAG_ACCESS_WRITE, DATA_FLAG_OVERWRITE,
+};
+use random_access_sse::{AuthSession, Mutex, ObjectId, PersistentObjectType, RandomAccessSse};
 use random_access_storage::RandomAccess;
 use sleep_parser::*;
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::Range;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 const HEADER_OFFSET: u64 = 32;
 
@@ -395,6 +400,51 @@ impl Storage<RandomAccessDisk> {
                 Store::Keypair => "key",
             };
             RandomAccessDisk::open(dir.join(name)).boxed()
+        };
+        Ok(Self::new(storage, overwrite).await?)
+    }
+}
+
+impl Storage<RandomAccessSse> {
+    /// Create a new instance backed by a `RandomAccessSse` instance.
+    pub async fn new_sse(
+        storage: Arc<Mutex<random_access_sse::Storage>>,
+        session: AuthSession,
+        obj_id: ObjectId,
+        storage_id: u32,
+        overwrite: bool,
+    ) -> Result<Self> {
+        let storage = |store: Store| {
+            let name = match store {
+                Store::Tree => "tree",
+                Store::Data => "data",
+                Store::Bitfield => "bitfield",
+                Store::Signatures => "signatures",
+                Store::Keypair => "key",
+            };
+
+            let mut obj_id_bytes = obj_id.to_vec();
+            obj_id_bytes.push(b'/');
+            obj_id_bytes.extend(name.as_bytes().iter());
+
+            let obj_id = ObjectId::from(&obj_id_bytes);
+
+            let mut flags = DATA_FLAG_ACCESS_READ | DATA_FLAG_ACCESS_WRITE;
+
+            if overwrite {
+                flags |= DATA_FLAG_OVERWRITE;
+            }
+
+            RandomAccessSse::open(
+                storage.clone(),
+                session.clone(),
+                obj_id,
+                PersistentObjectType::Data,
+                storage_id,
+                flags,
+                None,
+            )
+            .boxed()
         };
         Ok(Self::new(storage, overwrite).await?)
     }
