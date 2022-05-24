@@ -62,7 +62,7 @@ impl RandomAccess for RandomAccessSse {
             .inner()
             .file()
             .expect("self.object.inner.file was None.");
-        file.seek(SeekFrom::Start(offset))?;
+        file.seek(SeekFrom::Start(self.length + offset))?;
         file.write_all(&data)?;
         if self.auto_sync {
             file.sync_all()?;
@@ -94,7 +94,7 @@ impl RandomAccess for RandomAccessSse {
             .file()
             .expect("self.object.inner.file was None.");
         let mut buffer = vec![0; length as usize];
-        file.seek(SeekFrom::Start(offset))?;
+        file.seek(SeekFrom::Start(self.length + offset))?;
         let _bytes_read = file.read(&mut buffer[..])?;
         Ok(buffer)
     }

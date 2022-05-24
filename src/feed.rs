@@ -14,8 +14,8 @@ use anyhow::{bail, ensure, Result};
 use flat_tree as flat;
 use pretty_hash::fmt as pretty_fmt;
 use random_access_disk::RandomAccessDisk;
+use random_access_sse::{RandomAccessSse, Mutex, AuthSession, ObjectId};
 use random_access_memory::RandomAccessMemory;
-use random_access_sse::{AuthSession, Mutex, ObjectId, RandomAccessSse};
 use random_access_storage::RandomAccess;
 use tree_index::TreeIndex;
 
@@ -454,12 +454,7 @@ where
 
     /// Verify the entire feed with a public key. Checks a signature against the signature of all
     /// root nodes combined.
-    pub async fn verify_with_public(
-        &mut self,
-        public: &PublicKey,
-        index: u64,
-        signature: &Signature,
-    ) -> Result<()> {
+    pub async fn verify_with_public(&mut self, public: &PublicKey, index: u64, signature: &Signature) -> Result<()> {
         let roots = self.root_hashes(index).await?;
         let roots: Vec<_> = roots.into_iter().map(Arc::new).collect();
 
