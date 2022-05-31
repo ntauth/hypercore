@@ -18,6 +18,7 @@ pub struct RandomAccessSse {
     storage: Arc<Mutex<Storage>>,
     object: PersistentObject,
     length: u64,
+    seek_start: u64,
     auto_sync: bool,
 }
 
@@ -62,7 +63,7 @@ impl RandomAccess for RandomAccessSse {
             .inner()
             .file()
             .expect("self.object.inner.file was None.");
-        file.seek(SeekFrom::Start(self.length + offset))?;
+        file.seek(SeekFrom::Start(self.seek_start + offset))?;
         file.write_all(&data)?;
         if self.auto_sync {
             file.sync_all()?;
@@ -94,8 +95,11 @@ impl RandomAccess for RandomAccessSse {
             .file()
             .expect("self.object.inner.file was None.");
         let mut buffer = vec![0; length as usize];
-        file.seek(SeekFrom::Start(self.length + offset))?;
+
+        file.seek(SeekFrom::Start(self.seek_start + offset))?;
+        
         let _bytes_read = file.read(&mut buffer[..])?;
+
         Ok(buffer)
     }
 
@@ -246,7 +250,8 @@ impl<'a> SseBuilder<'a> {
         Ok(RandomAccessSse {
             storage: self.storage,
             object: object,
-            length: metadata.len(),
+            length: metadata.len() - 4,
+            seek_start: 4,
             auto_sync: self.auto_sync,
         })
     }
